@@ -1,0 +1,46 @@
+name: foldpdf
+
+services:
+  foldpdf:
+    build:
+      context: .
+      target: runtime
+    image: foldpdf:latest
+    restart: unless-stopped
+    init: true # reaps LibreOffice child processes
+    ports:
+      # By default the port is published on the host's localhost only.
+      # Set FOLDPDF_BIND=0.0.0.0 to expose it on the network (preferably behind a reverse proxy).
+      - "${FOLDPDF_BIND:-127.0.0.1}:${FOLDPDF_PORT:-8080}:8080"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      DATA_DIR: /data
+      DATABASE_URL: sqlite:////data/jobs.db
+      LIBREOFFICE_BIN: /usr/bin/soffice
+      # Comma-separated keys; empty = authentication disabled (not recommended outside localhost).
+      API_KEYS: ${API_KEYS:-}
+      MAX_SYNC_WAIT_SECONDS: ${MAX_SYNC_WAIT_SECONDS:-30}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-26214400}
+      MAX_WORKERS: ${MAX_WORKERS:-2}
+      MAX_QUEUED_JOBS: ${MAX_QUEUED_JOBS:-100}
+      CONVERSION_TIMEOUT_SECONDS: ${CONVERSION_TIMEOUT_SECONDS:-120}
+      JOB_TTL_SECONDS: ${JOB_TTL_SECONDS:-3600}
+      CLEANUP_INTERVAL_SECONDS: ${CLEANUP_INTERVAL_SECONDS:-60}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - foldpdf-data:/data
+    # Least privilege: read-only filesystem, no capabilities, no privilege escalation.
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+      - /home/app:size=64m,uid=10001,gid=10001,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # Lets running conversions finish on shutdown (timeout + margin).
+    stop_grace_period: 150s
+
+volumes:
+  foldpdf-data:

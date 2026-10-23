@@ -1,0 +1,45 @@
+# systemd unit for native execution (without Docker) on Linux.
+#
+# Installation (example with the project in /opt/foldpdf):
+#   sudo useradd --system --home /var/lib/foldpdf --shell /usr/sbin/nologin foldpdf
+#   sudo mkdir -p /var/lib/foldpdf && sudo chown foldpdf: /var/lib/foldpdf
+#   sudo chmod 700 /var/lib/foldpdf
+#   sudo cp deploy/foldpdf.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now foldpdf
+#   journalctl -u foldpdf -f
+
+[Unit]
+Description=FoldPDF (DOCX/XLSX/PPTX -> PDF REST API)
+After=network.target
+
+[Service]
+Type=simple
+User=foldpdf
+Group=foldpdf
+WorkingDirectory=/opt/foldpdf
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+Environment=DATA_DIR=/var/lib/foldpdf
+Environment=DATABASE_URL=sqlite:////var/lib/foldpdf/jobs.db
+Environment=HOME=/var/lib/foldpdf
+Environment=LOG_LEVEL=INFO
+# Optional: additional values (including API_KEYS) in a file with the same format as .env.example
+EnvironmentFile=-/etc/foldpdf.env
+ExecStart=/opt/foldpdf/.venv/bin/python -m app
+Restart=on-failure
+RestartSec=5
+# Waits for running conversions to finish (CONVERSION_TIMEOUT_SECONDS + margin)
+TimeoutStopSec=150
+KillMode=mixed
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/foldpdf
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

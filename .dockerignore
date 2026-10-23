@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+venv
+.env
+data
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.zip
+.idea
+.vscode
+deploy
+examples

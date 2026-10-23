@@ -1,0 +1,26 @@
+# Local environment and configuration
+.venv/
+venv/
+.env
+
+# Service data (documents, PDFs, database)
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Distribution archives
+*.zip
